@@ -1,0 +1,11 @@
+{
+  "name": "dip-final-sysu",
+  "version": "1.0.0",
+  "description": "the final project of the dip homework",
+  "main": "index.js",
+  "author": "HeZhiyu",
+  "license": "MIT",
+  "dependencies": {
+    "opencv4nodejs": "^2.26.1"
+  }
+}
