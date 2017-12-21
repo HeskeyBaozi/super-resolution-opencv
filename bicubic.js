@@ -2,7 +2,6 @@
  * @author 何志宇<hezhiyu233@foxmail.com>
  */
 
-const { getYChannelMatAsync } = require('./helpers');
 const cv = require('opencv4nodejs');
 
 /**
@@ -13,11 +12,13 @@ const cv = require('opencv4nodejs');
  * @return {Promise<cv.Mat>}
  */
 async function bicubicBGR(input_img, height, width) {
-    const channels = await input_img.splitChannelsAsync();
+    const YUV = await input_img.cvtColorAsync(cv.COLOR_BGR2YCrCb);
+    const channels = await YUV.splitChannelsAsync();
 
     const bicubiced = await Promise.all(channels.map(channel => scale(channel, height, width)));
 
-    return new cv.Mat(bicubiced);
+    const BGR = await (new cv.Mat(bicubiced)).cvtColorAsync(cv.COLOR_YCrCb2BGR);
+    return BGR;
 }
 
 
