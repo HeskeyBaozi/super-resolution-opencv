@@ -18,7 +18,6 @@ async function getYChannelMatAsync(bgrMat) {
     const YCbCrMat = await bgrMat.cvtColorAsync(cv.COLOR_BGR2YCrCb);
     const channels = await YCbCrMat.splitChannels();
     const Y = channels[0];
-    console.log('Y Channel = ', Y);
     return Y;
 }
 
