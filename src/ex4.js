@@ -12,7 +12,7 @@ const { PSNR } = require('./PSNR');
 const { SSIM } = require('./SSIM');
 
 async function runEx4() {
-    const fileNames = fs.readdirSync(path.resolve(__dirname, './set14'));
+    const fileNames = fs.readdirSync(path.resolve(__dirname, '../set14'));
     for (const name of fileNames) {
         console.log('running ', name);
         await processOnePicture(name);
@@ -20,7 +20,7 @@ async function runEx4() {
 }
 
 async function processOnePicture(filename) {
-    const I_HR = await cv.imreadAsync(path.resolve(__dirname, './set14/', filename));
+    const I_HR = await cv.imreadAsync(path.resolve(__dirname, '../set14/', filename));
     const { rows: input_rows, cols: input_cols } = I_HR;
 
     //const I_LR = await I_HR.resizeAsync(Math.floor(input_rows / 3), Math.floor(input_cols / 3));
