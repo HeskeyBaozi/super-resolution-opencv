@@ -2,7 +2,7 @@
  * @author 何志宇<hezhiyu233@foxmail.com>
  */
 
-const { getYChannelMatAsync } = require('./helpers');
+const { getYChannelMatAsync } = require('../utils/helpers');
 
 /**
  * 峰值信噪比

@@ -7,9 +7,9 @@ const fs = require('fs');
 const path = require('path');
 
 const cv = require('opencv4nodejs');
-const { bicubicBGR } = require('./bicubic');
-const { PSNR } = require('./PSNR');
-const { SSIM } = require('./SSIM');
+const { bicubicBGR } = require('./bicubic/bicubic');
+const { PSNR } = require('./estimation/PSNR');
+const { SSIM } = require('./estimation/SSIM');
 
 async function runEx4() {
     const fileNames = fs.readdirSync(path.resolve(__dirname, '../set14'));

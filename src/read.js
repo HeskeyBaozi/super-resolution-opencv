@@ -1,9 +1,9 @@
 const cv = require('opencv4nodejs');
 const path = require('path');
 
-const { PSNR } = require('./PSNR');
-const { SSIM } = require('./SSIM');
-const { bicubic, bicubicBGR } = require('./bicubic');
+const { PSNR } = require('./estimation/PSNR');
+const { SSIM } = require('./estimation/SSIM');
+const { bicubic, bicubicBGR } = require('./bicubic/bicubic');
 
 async function run() {
     const mat = await cv.imreadAsync(path.resolve(__dirname, './set14/monarch.bmp'));
