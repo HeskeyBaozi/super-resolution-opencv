@@ -6,6 +6,10 @@
   "author": "HeZhiyu",
   "license": "MIT",
   "dependencies": {
+    "mathjs": "^3.18.0",
+    "ml-knn": "^2.1.3",
+    "ml-regression-multivariate-linear": "^1.0.1",
+    "node-kmeans": "^1.1.0",
     "opencv4nodejs": "^2.26.1"
   }
 }

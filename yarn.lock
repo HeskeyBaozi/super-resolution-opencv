@@ -2,15 +2,91 @@
 # yarn lockfile v1
 
 
+complex.js@2.0.4:
+  version "2.0.4"
+  resolved "http://registry.npm.taobao.org/complex.js/download/complex.js-2.0.4.tgz#d8e7cfb9652d1e853e723386421c1a0ca7a48373"
+
+decimal.js@9.0.1:
+  version "9.0.1"
+  resolved "http://registry.npm.taobao.org/decimal.js/download/decimal.js-9.0.1.tgz#1cc8b228177da7ab6498c1cc06eb130a290e6e1e"
+
+fraction.js@4.0.4:
+  version "4.0.4"
+  resolved "http://registry.npm.taobao.org/fraction.js/download/fraction.js-4.0.4.tgz#04e567110718adf7b52974a10434ab4c67a5183e"
+
+javascript-natural-sort@0.7.1:
+  version "0.7.1"
+  resolved "http://registry.npm.taobao.org/javascript-natural-sort/download/javascript-natural-sort-0.7.1.tgz#f9e2303d4507f6d74355a73664d1440fb5a0ef59"
+
 macro-inferno@^0.2.1:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/macro-inferno/-/macro-inferno-0.2.1.tgz#20de3ae8e9ac76b3fc652cbf6c25f325a9ba2e22"
   dependencies:
     nan "^2.7.0"
 
+mathjs@^3.18.0:
+  version "3.18.0"
+  resolved "http://registry.npm.taobao.org/mathjs/download/mathjs-3.18.0.tgz#9d0162f31088459c3093f43e363d6a7ae7acf9d5"
+  dependencies:
+    complex.js "2.0.4"
+    decimal.js "9.0.1"
+    fraction.js "4.0.4"
+    javascript-natural-sort "0.7.1"
+    seed-random "2.2.0"
+    tiny-emitter "2.0.2"
+    typed-function "0.10.6"
+
+ml-array-max@^1.0.1:
+  version "1.0.1"
+  resolved "http://registry.npm.taobao.org/ml-array-max/download/ml-array-max-1.0.1.tgz#bd6213b1e0fdccf0eebb9c9a677c2d2405a92181"
+
+ml-array-min@^1.0.1:
+  version "1.0.1"
+  resolved "http://registry.npm.taobao.org/ml-array-min/download/ml-array-min-1.0.1.tgz#544b71ee0b2f38e6093e6a5964af8a6daff22f28"
+
+ml-array-rescale@^1.1.0:
+  version "1.1.0"
+  resolved "http://registry.npm.taobao.org/ml-array-rescale/download/ml-array-rescale-1.1.0.tgz#e5a6aaff247865d1e1c8acfb8ef630fe5df1e3a2"
+  dependencies:
+    ml-array-max "^1.0.1"
+    ml-array-min "^1.0.1"
+
+ml-distance-euclidean@^1.0.0:
+  version "1.0.0"
+  resolved "http://registry.npm.taobao.org/ml-distance-euclidean/download/ml-distance-euclidean-1.0.0.tgz#08447c2233641a2b2a9b4c29e5f792d28f1d5b95"
+
+ml-knn@^2.1.3:
+  version "2.1.3"
+  resolved "http://registry.npm.taobao.org/ml-knn/download/ml-knn-2.1.3.tgz#12b9d5c8877d98078d635d64d1acc8ad974f442b"
+  dependencies:
+    ml-distance-euclidean "^1.0.0"
+
+ml-matrix@^5.0.0:
+  version "5.0.1"
+  resolved "http://registry.npm.taobao.org/ml-matrix/download/ml-matrix-5.0.1.tgz#2cb1f20b33ed8a0475dadd68ca7a6f7da5c5482c"
+  dependencies:
+    ml-array-rescale "^1.1.0"
+
+ml-regression-base@^1.2.0:
+  version "1.2.0"
+  resolved "http://registry.npm.taobao.org/ml-regression-base/download/ml-regression-base-1.2.0.tgz#e8c58c12b649d845ecb13e0c246ad1be6e57cc1c"
+
+ml-regression-multivariate-linear@^1.0.1:
+  version "1.0.1"
+  resolved "http://registry.npm.taobao.org/ml-regression-multivariate-linear/download/ml-regression-multivariate-linear-1.0.1.tgz#fb1f1eb7cadac11d27eacc9473da2b83795ec0cb"
+  dependencies:
+    ml-matrix "^5.0.0"
+    ml-regression-base "^1.2.0"
+
 nan@^2.7.0:
   version "2.8.0"
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.8.0.tgz#ed715f3fe9de02b57a5e6252d90a96675e1f085a"
+
+node-kmeans@^1.1.0:
+  version "1.1.0"
+  resolved "http://registry.npm.taobao.org/node-kmeans/download/node-kmeans-1.1.0.tgz#fa250cb6f273bb42ac70df679f0d4512eab222f2"
+  dependencies:
+    underscore "1.4.2"
 
 opencv4nodejs@^2.26.1:
   version "2.26.1"
@@ -18,3 +94,19 @@ opencv4nodejs@^2.26.1:
   dependencies:
     macro-inferno "^0.2.1"
     nan "^2.7.0"
+
+seed-random@2.2.0:
+  version "2.2.0"
+  resolved "http://registry.npm.taobao.org/seed-random/download/seed-random-2.2.0.tgz#2a9b19e250a817099231a5b99a4daf80b7fbed54"
+
+tiny-emitter@2.0.2:
+  version "2.0.2"
+  resolved "http://registry.npm.taobao.org/tiny-emitter/download/tiny-emitter-2.0.2.tgz#82d27468aca5ade8e5fd1e6d22b57dd43ebdfb7c"
+
+typed-function@0.10.6:
+  version "0.10.6"
+  resolved "http://registry.npm.taobao.org/typed-function/download/typed-function-0.10.6.tgz#314aa0ea72bd586de5920095559683e20b01688b"
+
+underscore@1.4.2:
+  version "1.4.2"
+  resolved "http://registry.npm.taobao.org/underscore/download/underscore-1.4.2.tgz#cb2aae6a7999a89fd55aaee75bce0311698cebfb"
