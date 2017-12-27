@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const MRL = require('ml-regression-multivariate-linear');
+const { MultivariateLinearRegression } = require('./regress');
 const KNN = require('ml-knn');
 
 const cv = require('opencv4nodejs');
@@ -8,11 +8,11 @@ const { bicubicBGR, scale } = require('../bicubic/bicubic.js');
 const { PSNR } = require('../estimation/PSNR');
 const { SSIM } = require('../estimation/SSIM');
 
-async function runEx5() {
+async function runEx5(k) {
     const fileNames = fs.readdirSync(path.resolve(__dirname, '../../set14'));
     const classCenters = [];
     const labels = [];
-    for (let count = 0; count < 256; count++) {
+    for (let count = 0; count < k; count++) {
         classCenters.push(require(`./center/${count}.json`));
         labels.push(count);
     }
@@ -89,7 +89,7 @@ async function SR_Y(LR, newH, newW, knn, filename) {
 
             const mrlJson = require(`./C/${nearest}.json`);
 
-            const mrl = MRL.load(mrlJson);
+            const mrl = MultivariateLinearRegression.load(mrlJson);
 
             //console.log('C Matrix Loaded');
 
@@ -126,4 +126,4 @@ async function SR_Y(LR, newH, newW, knn, filename) {
     return output;
 }
 
-runEx5();
+runEx5(512);

@@ -1,28 +1,28 @@
+/**
+ * 训练字典，即训练映射LR feature 到 HR patch 的矩阵
+ * @author 何志宇<hezhiyu233@foxmail.com>
+ */
+
 const fs = require('fs');
 const path = require('path');
 const cv = require('opencv4nodejs');
 const { getYChannelMatAsync } = require('../utils/helpers');
 const K_means = require('node-kmeans');
-const MLR = require('ml-regression-multivariate-linear');
-const mathjs = require('mathjs');
+const { MultivariateLinearRegression } = require('./regress');
 
 
-async function trainPairs(dir) {
-
-    const originNames = fs.readdirSync(dir).map(name => name.replace(/\..*$/, ''));
-
-    // train
-    for (const name of originNames) {
-        console.log(`[Train] ${name}`);
-        const inputMat = await cv.imreadAsync(path.resolve(dir, name + '.jpg'));
-        await trainOne(inputMat, 1.6, name);
-    }
-
-    // k-means
+/**
+ * 在训练完所有的高清图像之后，我们得到了长达百万的feature
+ */
+async function readFeatureFromDataBase(originNames) {
     let features = [];
     let centers = [];
     let names = [];
-    if (!fs.existsSync('features.json')) {
+    if (fs.existsSync('features.json')) {
+        features = require('./features.json');
+        centers = require('./centers.json');
+        names = require('./names.json');
+    } else {
         for (const name of originNames) {
             if (name.startsWith('BSD')) {
                 const dbPath = path.resolve(__dirname, `./db/${name}.json`);
@@ -32,93 +32,135 @@ async function trainPairs(dir) {
                 centers.push(...HR_centers);
                 names.push(...HR_names);
 
-                if (features.length >= 400000) {
-                    console.log('data length is >= 40w, break!');
+                /**
+                 * 由于Javascript Heap Memory限制，超过了某一个长度的数组会导致警报，强制退出程序
+                 * 这里限制了feature在limit数量以内
+                 */
+                const limit = 500000;
+                if (features.length >= limit) {
+                    console.log(`data length is >= ${limit}, break!`);
                     break;
                 }
             }
         }
 
+        /**
+         * 用.json文件存储处理结果
+         */
         fs.writeFileSync('features.json', JSON.stringify(features));
         fs.writeFileSync('centers.json', JSON.stringify(centers));
         fs.writeFileSync('names.json', JSON.stringify(names));
         console.log('writeFile!');
-    } else {
-        features = require('./features.json');
-        centers = require('./centers.json');
-        names = require('./names.json');
     }
 
-    console.log('get feature, length = ', features.length);
-    if (false) {
-        const result = await KMeans(features, { k: 256 });
-        console.log('kmeans computed');
-        for (let classCase = 0; classCase < 256; classCase++) {
-            if (!fs.existsSync(`./V/${classCase}.json`)) {
-                const { centroid, cluster, clusterInd } = result[classCase];
-                const V_Matrix = new cv.Mat(45, cluster.length, cv.CV_32FC1);
-                const M_Matrix = new cv.Mat(144, cluster.length, cv.CV_32FC1);
+    return {
+        features,
+        centers,
+        names
+    };
+}
 
-                // get V Matrix
-                for (let r = 0; r < V_Matrix.rows; r++) {
-                    for (let c = 0; c < V_Matrix.cols; c++) {
-                        V_Matrix.set(r, c, Number.parseFloat(cluster[c][r].toFixed(3)));
-                    }
+
+/**
+ * 训练 <LR Feature, HR patch> 这一个元组队
+ * @param dir 训练集合的路径 指向 train 文件夹
+ * @return {Promise<void>}
+ */
+async function trainPairs(dir) {
+
+    /**
+     * 读取的名字数组，长度为训练集的数量
+     * ['BSD_2092', 'BSD_3096', ...]
+     */
+    const originNames = fs.readdirSync(dir).map(name => name.replace(/\..*$/, ''));
+
+    // train
+    for (const name of originNames) {
+        console.log(`[Train] ${name}`);
+        const inputMat = await cv.imreadAsync(path.resolve(dir, name + '.jpg'));
+
+        /**
+         * 这里调用训练函数, sigma = 1.6 用于高斯模糊处理
+         */
+        await trainOne(inputMat, 1.6, name);
+    }
+
+
+    /**
+     * 如果没有训练聚类，就训练聚类并存储
+     */
+    const k = 512;
+    if (!fs.existsSync(`./V/${k - 1}.json`) || !fs.existsSync(`./C/${k - 1}.json`)) {
+        const { features, centers, names } = await readFeatureFromDataBase(originNames);
+
+
+        console.log(`[Running] Kmeans, k = ${k}`);
+
+        let result = await KMeans(features, { k });
+
+        while (result.some(({ cluster }) => cluster.length === 0)) {
+            console.log('Run again');
+            result = null;
+            result = await KMeans(features, { k });
+        }
+
+        console.log('Run VM');
+        for (let count = 0; count < k; count++) {
+            const { centroid, cluster, clusterInd } = result[count];
+
+            // 对于每一个聚类
+
+            // @types Array<Vector45>
+            const LR_Patch_Array = cluster;
+
+
+            // @types Array<Vector144>
+            const HR_Patch_Array = [];
+
+            let HR = null;
+            let lastName = null;
+
+            for (let i = 0; i < clusterInd.length; i++) {
+                const index = clusterInd[i];
+                const center = centers[index];
+                const name = names[index];
+
+                if (name !== lastName) {
+                    HR = await cv.imreadAsync(path.resolve(__dirname, '../../train/' + name + '.jpg'));
+                    HR = await getYChannelMatAsync(HR);
+                    lastName = name;
                 }
 
-                let lastName = null;
-                let HR = null;
-
-                for (let r = 0; r < M_Matrix.rows; r++) {
-                    for (let c = 0; c < M_Matrix.cols; c++) {
-                        const index = clusterInd[c];
-                        const center = centers[index];
-                        const name = names[index];
-
-                        if (name !== lastName) {
-                            HR = await cv.imreadAsync(path.resolve(__dirname, '../../train/' + name + '.jpg'));
-                            HR = await getYChannelMatAsync(HR);
-                            lastName = name;
-                        }
-                        //cv.imshowWait(name, HR);
-
-                        const vector = [];
-
-                        for (let i = center.r - 6; i < center.r + 6; i++) {
-                            for (let j = center.c - 6; j < center.c + 6; j++) {
-                                vector.push(HR.at(i, j));
-                            }
-                        }
-
-                        //console.log('W vector length =', vector.length);
-                        M_Matrix.set(r, c, vector[r]);
+                const vector_HR = []; // Vector<144>
+                for (let i = center.r - 6; i < center.r + 6; i++) {
+                    for (let j = center.c - 6; j < center.c + 6; j++) {
+                        vector_HR.push(HR.at(i, j));
                     }
                 }
+                HR_Patch_Array.push(vector_HR);
+            }
 
-                console.log(V_Matrix);
-                console.log(M_Matrix);
-
-                await cv.imwriteAsync(`./V/${classCase}.bmp`, V_Matrix);
-                await cv.imwriteAsync(`./M/${classCase}.bmp`, M_Matrix);
-                fs.writeFileSync(`./V/${classCase}.json`, JSON.stringify(V_Matrix.getDataAsArray()));
-                fs.writeFileSync(`./M/${classCase}.json`, JSON.stringify(M_Matrix.getDataAsArray()));
-                fs.writeFileSync(`./center/${classCase}.json`, JSON.stringify(centroid));
-
-                console.log('write Matrix File!' + classCase);
+            // console.log('LR length = ', LR_Patch_Array.length);
+            // console.log('HR length = ', HR_Patch_Array.length);
+            fs.writeFileSync(`./V/${count}.json`, JSON.stringify(LR_Patch_Array));
+            fs.writeFileSync(`./M/${count}.json`, JSON.stringify(HR_Patch_Array));
+            fs.writeFileSync(`./center/${count}.json`, JSON.stringify(centroid));
+            if (LR_Patch_Array.length === 0) {
+                console.log(`[Write ${count}]`);
             }
         }
     }
 
-    if (!fs.existsSync('./C/255.json')) {
-        for (let count = 0; count < 256; count++) {
-            console.log('run C', count);
+
+    // 如果没有系数矩阵，就训练
+    if (!fs.existsSync(`./C/${k - 1}.json`)) {
+        for (let count = 0; count < k; count++) {
+            console.log('[Train C Matrix]', count);
             const V = require(`./V/${count}.json`);
             const M = require(`./M/${count}.json`);
 
-            const X = mathjs.transpose(V);
-            const Y = mathjs.transpose(M);
 
-            const mlr = new MLR(X, Y);
+            const mlr = new MultivariateLinearRegression(V, M);
 
             fs.writeFileSync(`./C/${count}.json`, JSON.stringify(mlr.toJSON()));
         }
@@ -130,34 +172,73 @@ async function trainPairs(dir) {
 // run!
 trainPairs(path.resolve(__dirname, '../../', './train'));
 
+/**
+ * 对于一个图像的训练函数
+ * @param inputMat 要训练的高清图像
+ * @param sigma 高斯模糊参数
+ * @param name 图像文件名
+ * @return {Promise<void>}
+ */
 async function trainOne(inputMat, sigma, name) {
+
+    /**
+     * 用来存储生成结果的路径
+     * @type {*|string}
+     */
     const dbPath = path.resolve(__dirname, `./db/${name}.json`);
     if (!fs.existsSync(dbPath)) {
+
+        /**
+         * 只处理Y通道
+         */
         const Y = await getYChannelMatAsync(inputMat);
         const generated = await GenerateFeatureFromHR(Y, sigma, name);
         fs.writeFileSync(dbPath, JSON.stringify(generated));
     }
 }
 
+/**
+ * 从高清图生成feature的函数
+ * @param HR_Mat 高清图矩阵
+ * @param sigma 高斯模糊参数
+ * @param name 文件名字
+ * @return {Promise<{LR_features: Array, HR_centers: Array, HR_names: Array}>}
+ */
 async function GenerateFeatureFromHR(HR_Mat, sigma, name) {
-    const patchSize = 7;
-    const patchSizeHalf = (patchSize - 1) / 2;
+    const patchSize = 7; // patch 大小
+    const patchSizeHalf = (patchSize - 1) / 2; // patch 大小的一般，用于后面迭代计算
 
+    /**
+     * 生成低分辨率图像
+     * @type {cv.Mat}
+     */
     const LR = await GenerateLR(HR_Mat, sigma);
     //cv.imshowWait('GS, down 1/3', LR);
 
-    const LR_features = [];
-    const HR_centers = [];
-    const HR_names = [];
+    const LR_features = []; // 存储图像特征
+    const HR_centers = []; // 存储该特征对应的高清图中心点
+    const HR_names = []; // 存储该图像名字
 
+    // 这里遍历了低分辨率图像的中心内容
     // r => 3, 4, ...,
     for (let r = patchSizeHalf; r < LR.rows - patchSizeHalf; r++) {
         for (let c = patchSizeHalf; c < LR.cols - patchSizeHalf; c++) {
+
+            /**
+             * 一个LR Patch来自于该分辨率图像的一个7*7切割
+             */
             const patch_LR = LR.getRegion(new cv.Rect(c - patchSizeHalf, r - patchSizeHalf, patchSize, patchSize));
 
+            /**
+             * feature是一个长度为45的数组，45 = 7 * 7 - 4
+             * @type {Array}
+             */
             const vector_LR = [];
             for (let i = 0; i < 7; i++) {
                 for (let j = 0; j < 7; j++) {
+                    /**
+                     * 这里除掉了LR Patch的四个角
+                     */
                     if (i === 0 && j === 0 || i === 0 && j === 6 || i === 6 && j === 0 || i === 6 && j === 6) {
                         continue;
                     }
@@ -165,7 +246,17 @@ async function GenerateFeatureFromHR(HR_Mat, sigma, name) {
                 }
             }
             const sum = vector_LR.reduce((sum, next) => sum + next, 0);
+
+            /**
+             * vector的平均数
+             * @type {number}
+             */
             const mean = sum / vector_LR.length;
+
+            /**
+             * vector_mean就是一个feature，由于减去了平均数，所以有正有负
+             * @type {number[]}
+             */
             const vector_mean = vector_LR.map(val => val - mean).map(num => Number.parseFloat(num.toFixed(3)));
             LR_features.push(vector_mean);
             // zoom out 3
