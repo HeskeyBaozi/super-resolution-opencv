@@ -13,5 +13,8 @@
     "ml-regression-multivariate-linear": "^1.0.1",
     "node-kmeans": "^1.1.0",
     "opencv4nodejs": "^2.26.1"
+  },
+  "devDependencies": {
+    "@types/mathjs": "^0.0.35"
   }
 }

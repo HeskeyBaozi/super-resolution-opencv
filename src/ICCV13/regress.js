@@ -1,4 +1,5 @@
-const Matrix = require('ml-matrix');
+const Matrix = require('ml-matrix')['default'];
+Matrix.SVD = require('ml-matrix').SVD;
 
 /**
  * 线性回归基本类型

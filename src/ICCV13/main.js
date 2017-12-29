@@ -11,6 +11,9 @@ const K_means = require('node-kmeans');
 const { MultivariateLinearRegression } = require('./regress');
 
 
+// run!
+trainPairs(path.resolve(__dirname, '../../', './train'));
+
 /**
  * 在训练完所有的高清图像之后，我们得到了长达百万的feature
  */
@@ -169,8 +172,6 @@ async function trainPairs(dir) {
     return;
 }
 
-// run!
-trainPairs(path.resolve(__dirname, '../../', './train'));
 
 /**
  * 对于一个图像的训练函数

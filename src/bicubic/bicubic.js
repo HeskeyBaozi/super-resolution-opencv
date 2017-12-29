@@ -12,54 +12,52 @@ const cv = require('opencv4nodejs');
  * @return {Promise<cv.Mat>}
  */
 async function bicubicBGR(input_img, height, width) {
-    const YUV = await input_img.cvtColorAsync(cv.COLOR_BGR2YCrCb);
-    const channels = await YUV.splitChannelsAsync();
+  const YUV = await input_img.cvtColorAsync(cv.COLOR_BGR2YCrCb);
+  const channels = await YUV.splitChannelsAsync();
 
-    const bicubiced = await Promise.all(channels.map(channel => scale(channel, height, width)));
+  const bicubiced = await Promise.all(channels.map(channel => scale(channel, height, width)));
 
-    const BGR = await (new cv.Mat(bicubiced)).cvtColorAsync(cv.COLOR_YCrCb2BGR);
-    return BGR;
+  const BGR = await (new cv.Mat(bicubiced)).cvtColorAsync(cv.COLOR_YCrCb2BGR);
+  return BGR;
 }
 
 
 /**
  * 双三次差值图像缩放
- * @param input
- * @param newH
- * @param newW
- * @return {Promise<cv.Mat>}
+ * @param input 输入图像
+ * @param newH 新的高度
+ * @param newW 新的宽度
+ * @return {Promise<cv.Mat>} 输出图像矩阵
  */
 async function scale(input, newH, newW) {
-    const output = new cv.Mat(newH, newW, cv.CV_8UC1, 0);
-    for (let i = 0; i < output.rows; i++) {
-        for (let j = 0; j < output.cols; j++) {
-            const srcRow = i / (output.rows / input.rows);
-            const srcCol = j / (output.cols / input.cols);
+  const output = new cv.Mat(newH, newW, cv.CV_8UC1, 0);
+  for (let i = 0; i < output.rows; i++) {
+    for (let j = 0; j < output.cols; j++) {
+      const srcRow = i / (output.rows / input.rows);
+      const srcCol = j / (output.cols / input.cols);
+      const floorRow = Math.floor(srcRow);
+      const floorCol = Math.floor(srcCol);
+      const v = srcRow - floorRow;
+      const u = srcCol - floorCol;
 
-            const floorRow = Math.floor(srcRow);
-            const floorCol = Math.floor(srcCol);
-
-            const v = srcRow - floorRow;
-            const u = srcCol - floorCol;
-
-            let sum = 0;
-            for (let m = -1; m <= 2; m++) {
-                for (let n = -1; n <= 2; n++) {
-                    let inputValue = 0;
-                    if (0 <= floorRow + m && floorRow + m < input.rows && 0 <= floorCol + n && floorCol + n < input.cols) {
-                        inputValue = input.at(floorRow + m, floorCol + n);
-                    }
-                    sum += inputValue * W(m - v) * W(n - u);
-                }
-            }
-
-            sum = Math.min(255, sum);
-            sum = Math.max(0, sum);
-
-            output.set(i, j, sum);
+      let sum = 0;
+      for (let m = -1; m <= 2; m++) {
+        for (let n = -1; n <= 2; n++) {
+          let inputValue = 0;
+          // 边界判断
+          if (0 <= floorRow + m && floorRow + m < input.rows &&
+            0 <= floorCol + n && floorCol + n < input.cols) {
+            inputValue = input.at(floorRow + m, floorCol + n);
+          }
+          sum += inputValue * W(m - v) * W(n - u);
         }
+      }
+      sum = Math.min(255, sum);
+      sum = Math.max(0, sum);
+      output.set(i, j, sum);
     }
-    return output;
+  }
+  return output;
 }
 
 /**
@@ -68,25 +66,25 @@ async function scale(input, newH, newW) {
  * @return {number}
  */
 function W(x) {
-    const absX = Math.abs(x);
-    let result = 0;
+  const absX = Math.abs(x);
+  let result = 0;
 
-    if (2 < absX) {
-        result = 0;
-    } else {
-        const absX2 = Math.pow(absX, 2);
-        const absX3 = Math.pow(absX, 3);
-        if (0 <= absX && absX <= 1) {
-            result = 1.5 * absX3 - 2.5 * absX2 + 1;
-        } else if (1 < absX && absX <= 2) {
-            result = -0.5 * absX3 + 2.5 * absX2 - 4 * absX + 2;
-        }
+  if (2 < absX) {
+    result = 0;
+  } else {
+    const absX2 = Math.pow(absX, 2);
+    const absX3 = Math.pow(absX, 3);
+    if (0 <= absX && absX <= 1) {
+      result = 1.5 * absX3 - 2.5 * absX2 + 1;
+    } else if (1 < absX && absX <= 2) {
+      result = -0.5 * absX3 + 2.5 * absX2 - 4 * absX + 2;
     }
-    return result;
+  }
+  return result;
 }
 
 
 module.exports = {
-    scale,
-    bicubicBGR
+  scale,
+  bicubicBGR
 };

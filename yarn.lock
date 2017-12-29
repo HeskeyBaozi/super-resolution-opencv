@@ -2,6 +2,10 @@
 # yarn lockfile v1
 
 
+"@types/mathjs@^0.0.35":
+  version "0.0.35"
+  resolved "http://registry.npm.taobao.org/@types/mathjs/download/@types/mathjs-0.0.35.tgz#ac73ba3284653757394e85f17e5a306bc2e77267"
+
 RandomSelection@^1.0.1:
   version "1.0.1"
   resolved "http://registry.npm.taobao.org/RandomSelection/download/RandomSelection-1.0.1.tgz#68fc8f7a4ec2ae7153049349e44f8fa1393311bb"
